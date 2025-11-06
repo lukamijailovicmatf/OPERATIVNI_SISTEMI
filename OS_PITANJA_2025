@@ -1,0 +1,34 @@
+
+akademska godina 2024/2025
+
+Jan2
+1. Dinamicko particionisanje i realizacija
+2. Arhitekture po jezgrima
+3. Razlika izmedju DMA i prozivanja
+4. Algoritam SATA, LFU, MFU
+
+
+Jun1
+1. Bankarev algoritam
+2. Detaljno objasniti vrste implementacije fajlova
+3. Algoritam SATA
+4. Fragmentacija, sta je, koje postoje. Kada nastaje fragmentacija
+
+
+Jun2
+1. Semafori i monitori. Razlike, prednosti, mane
+2. NRU, LFU, LRU, algoritam SATA
+3. Pekarski algoritam. Objasniti kriticne delove
+4. DMA i prozivanje
+
+Sep1
+1. Staticko particionisanje i implementacija
+2. Semafori i regioni. Uporedjivanje, prednosti, mane
+3. Algoritam sata detaljno, diskusija LFU i MFU
+4. I/O preko prekida
+
+Sep2
+1. Semafori i monitori. Uporedjivanje, prednosti, mane
+2. LFU, LRU, NRU, algoritam SATA
+3. Lamportov (pekarski) algoritam. Objasniti implementaciju i napisati kod
+4. Razlika izmedju DMA i tehnike prozivanja
