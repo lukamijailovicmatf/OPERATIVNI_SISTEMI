@@ -1,0 +1,369 @@
+2. CAS (snimak Vidoje)
+
+- informacije o svim korisnicima na linux sistemu se nalaze u fajlu /etc/passwd
+
+- man 3 getpwnam (na osnovu prosledjenog imena koje se prosledjuje kao string
+  vraca informacije o tom korisniku koji se tako zove)
+  
+- man 3 getpwent (funkcija koja oponasa iteriranje kroz user fajl)
+
+- man 3 setpwent (funkcija koja oponasa inicijalizaciju)
+
+- man 3 endpwent (funkcija koja oponasa kraj petlje)
+
+- informacije o svim grupama na linux sistemu se nalaze u fajlu /etc/group
+
+- man 3 getgrnam (na osnovu prosledjenog imena koje se prosledjuje kao string
+  vraca informacije o toj grupi koja se tako zove)
+  
+- man 3 getgrgid(na osnovu prosledjenog id vraca informacije o toj grupi)
+
+- man 3 getgrent (funkcija koja oponasa iteriranje kroz group fajl)
+
+- man 3 setgrent (funkcija koja oponasa inicijalizaciju)
+
+- man 3 endgrent (funkcije koje oponasa kraj petlje)
+
+- kod grupa ne oslobadjamo memoriju tj. ne radimo free nad pokazivacem
+
+- od zadataka na ispitu: da se prolistaju grupe, da se filtriraju grupe, da se ispisu
+  neki korisnici koji su clanovi nekih grupa itd
+  
+- man 2 stat (na osnovu putanje do fajla cita informacije o fajlu i smesta u neku
+  strukturu)
+
+- man 7 inode (za predefinisane makroe)
+
+- broj hard linkova fajla gledamo u stat strukturi tj. jednom njenom polju
+
+- man 3 ctime (funkcije za rad sa vremenom)
+
+- ctime funkcija prima pokazivac na broj sekundi i njega ne oslobadjamo
+
+- man 2 utime
+
+- const int *p (pokazivac na konstantni int, ne moze da se menj vrednost preko p ali preko neceg drugog moze)
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+3. CAS (snimak Vidoje)
+
+- man 2 umask (sistemski poziv koji radi sa maskom koji sluzi za zabranu prava pristupa
+  pri kreiranju fajlova odnosno direktorijuma)
+  
+- mask = neki broj koji sadrzi bitove u sebi koje treba iskljuciti
+
+- man 2 chmod (sistemski poziv pomocu kojeg je moguce za korisnika, grupu ili ostale
+  promeniti prava na fajlu ili direktorijumu)
+  
+- man 3 strtol (funkcija koja konvertuje string u long integer i daje mogucnost u
+  kojoj osnovi zelimo da zapisemo konvertovani string)
+  
+- simbolicki link postoji kao fajl sam za sebe
+
+- hard linkovi ne mogu da postoje za direktorijum
+
+- simbolicki linkovi mogu da pokazuju i na direktorijum
+
+- man 2 lstat
+
+- soft link: postoji kao fajl sam za sebe tako da vise soft linkova su svaki za sebe
+  poseban fajl i svaki od njih ima svoj i-node broj pri cemu oni mogu da pokazuju na isti
+  fajl, ali ne moraju, mogu da menjaju na sta pokazuju
+
+- hard link: ne postoji kao fajl sam za sebe, vec je to drugo ime za jedan isti fajl tako
+  da vise hard linkova su razlicita imena za jednu istu stvar
+  
+- man 3 opendir (otvara direktorijum tako sto funkcija prihvata putanju)
+
+- man 3 readdir ()
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+5. CAS (snimak Vidoje)
+
+- man 3 nftw (u slucaju da dodje zadatak obilaska direktorijuma koristi se nftw)
+
+- man 2 fcntl (vraca sve flegove nad otvorenim fajl deskriptorom, zanima nas samo sekcija File status
+  flags)
+  
+- fcntl vraca -1 u slucaju greske
+  
+- man localtime (nam vraca strukturu iz koje gledamo tj. izvlacimo podatke o vremenu)
+  
+- POTPIS: struct tm *localtime(const time_t *timep);
+  
+- za localtime je memorija STATICKI alocirana tako da nema potrebe da koristimo free()!!!
+  
+- funkcija mktime od strukture koja joj se prosledi daje sekunde
+  
+- POTPIS: time_t mktime(struct tm *tm);
+  
+- za ispit ctime, localtime i mktime ostale nece trebati
+  
+- man 2 gettimeofday (za milisekunde i mikrosekunde) -> struktura TIMEVAL
+  
+- strtol pretvara 
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+6. CAS (snimak Vidoje)
+
+- proces (program koji se neprestano izvrsava)
+
+- ps -ely (izlistava sve procese na sistemu)
+
+- man 2 fork (sistemski poziv tj. funkcija koja pravi dete proces)
+
+- getpid() (vraca prosec id od procesa koji se upravo izvrsio tj. od mog trenutnog
+  procesa na sistemu)
+  
+- svaki proces ima upisan svoj proces id negde na sistemu
+
+- roditelj ima manju vrednost proces id - a nego dete
+
+- fork vraca proces id deteta u parent-u, a 0 u slucaju da je pozvan u detetu
+
+- man 2 wait (sistemski poziv koji suspenduje naredbe)
+
+- proces koji kreira novi proces se zove roditelj, a proces koji je kreiran se zove
+  dete proces
+  
+- man 2 pipe (sluze samo za komunikaciju izmedju roditelja i deteta, jednosmerna
+  komunikacija)
+
+- za dvosmernu komunikaciju cemo koristiti dva pipe-a
+
+- man 3 getline
+
+- pipe sistemski poziv ide uvek pre fork sistemskog poziva!!!
+
+- man 3 exec (zamenjuje ceo adresni prostor jednog programa sa adresnim prostorom
+  drugog programa)
+  
+- char *const argv[] -> niz konstantnih pokazivaca
+
+- $PATH (izlistava direktorijume tj putanje razdvojene sa :)
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+7. CAS (snimak Vidoje)
+
+- fork i exec se obicno koriste u kombinaciji
+
+- najcesce radimo prvo fork gde pravimo novo dete a zatim ce to novo dete sa exec pozivom da se zameni sa nekim
+  drugim procesom skroz i da radi onda nesto
+
+- dete je oznaceno sa child == 0 tj ako imamo if (child == 0) {...} ta grana nam kaze da smo u detetu
+
+- execvp (...v. se koristi kad imamo niz argumenata da prosledimo funkciji, a ....p se koristi da na primer
+  funkciji mozemo da prosledimo samo argument "ls" da ne moramo celu putanju da prosledjujemo na primer
+  "/bin/ls" tj. hocemo da nam bude dovoljno samo ime)
+  
+- man waitpid (on ceka konkretan proces sa pid-om pid da se zavrsi, upisuje status na adresu wstatus i mi
+  mu zadajemo neke opcije)
+  POTPIS: pid_t waitpid(pid_t pid, int *wstatus, int options);
+
+- signal je drugo ime za SOFTVERSKI PREKID (Ctrl + C je odgovarajuci hardverski prekid i za njega se generise
+  odgovarajuci softverski prekid, to radi kernel)
+  
+- kill -l (daje nam listu signala sa njihovim brojevima)
+
+- core dump (stanje procesora u trenutku kada je signal stigao)
+
+- ponasanje tj. sta ce se desavati u zavisnosti koji signal je stigao se podesava preko signal handler - a (to je samo
+  funkcija koja se poziva kada odredjeni signal stigne)
+  
+- na primer SIGKILL mora da ubije taj proces
+
+- na primer SIGQUIT pored toga sto ubija proces on mu naredi da izvrsi core dumped
+
+- za neke signale kao sto je SIGKILL NE MOZEMO da promenimo ponasanje
+
+- sistemski poziv signal vraca pokazivac tj adresu na neku funkciju tacnije vraca nam se tacna adresa starog
+  signal_t handler - a
+  
+- kada pisemo signal handler argument te funkcije je redni broj signala koji je pristigao
+
+- pajp sluzi samo za komunikaciju samo kada je u slucaju roditelj / dete
+
+- signali sluze za komunikaciju izmedju dva nezavisna procesa
+  
+- sleep(5) uspavljuje proces na 5 sekundi, a pause() uspavljuje proces dok ne stigne neki signal
+
+- obavezno kada se radi sa signalima treba definisati makro _DEFAULT_SOURCE
+
+- man kill
+
+- za SIGKILL nema promene ponasanja
+
+- fifo (fajl na sistemu kojeg koriste dva procesa da komuniciraju na primer)
+
+- fifo fajl je IMENOVANI pajp
+
+- fifo ne moze da cuva sadrzaj kada ga niko ne koristi, on moze da ima sadrzaj samo u onom trenutku kada
+  ga dva procesa drze otvorenim i rade nesto sa njim
+  
+- mkfifo(argv[1], 0600) nacin da kreiramo jedan fifo fajl
+
+- fifo fajl da bi bio otvoren mora biti otvoren i za citanje i za pisanje
+
+- man 3 mkfifo
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+8. CAS (snimak Vidoje)
+
+- fifo fajlovi i signali su jedan od nacina za komunikaciju izmedju procesa
+
+- fifo fajlovi su samo imenovani pajp-ovi
+
+- pajp sluzi za komunikaciju izmedju procesa kada su u pitanju roditelj i dete, a fifo fajlove smo mogli
+  da koristimo i za komunikaciju izmedju procesa koji nisu u odnosu roditelj i dete tj. koji nisu u srodstvu
+  
+- cak se implementacija pajp-ova koristi za fifo fajlove
+
+- glavna razlika izmedju fifo i pajpa jeste da fifo postoji kao poseban fajl na sistemu, ima svoj tip, svoja
+  prava pristupa i ostalo
+  
+- signali su takodje jedan od nacina za komunikaciju izmedju procesa i njih smo mogli da koristimo za to
+  iako oni nisu najbolji nacin u smislu za slanje poruka izmedju procesa vec su vise da jave jedan drugom
+  procesu da se nesto desilo i da onda jedan proces moze da odreaguje na ovo sto je drugi poslao kao signal
+
+- jos jedan od nacina za komunikaciju izmedju procesa predstavlja deljena memorija odnosno objekti deljene
+  memorije
+  
+- pajp otvori jednu "cev" od jednog procesa do drugog i onda procesi mogu da otvore read i write kraj i da
+  tako medjusobno salju podatke preko tog pajpa
+  
+- ili mozemo da napravimo fifo fajl koji vec postoji na sistemu i da onda na primer proces P1 pise u njega
+  a drugi proces P2 da cita iz njega
+  
+- kao sto samo ime kaze FIFO (first in first out) onaj podatak koji prvi dodje ce da prvi izadje iz fajla
+
+- na linux-u je objekat deljene memorije jedan poseban regularan fajl koji postoji na jednoj odredjenoj lokaciji
+
+- ls /dev/shm je komanda koja nam daje sve objekte deljene memorije na sistemu
+
+- taj objekat mozemo da zamislimo da je skroz nezavisan od adresnih prostora samih procesa
+
+- jedan proces hocemo da kreira objekat deljene memorije odredjene velicine da nesto upise u njega, a da posle
+  drugi procesi citaju ili nesto drugo
+  
+- postoji poseban sistemski poziv u okviru C-a koji radi sa objektima deljene memorije a to je shm_open
+  
+- shm_open vraca fajl deskriptor kao i poziv open
+
+- pomocu poziva ftruncate podesavamo velicinu naseg objekta deljene memorije
+
+- onda pomocu poziva mmap mapiramo nas objekat deljene memorije u adresni prostor procesa P1
+
+- ako smo u proces P1 umapirali nas objekat deljene memorije mi onda nesto radimo u procesu P1 i to moze ali i
+  ne mora da se preslika u adresni prostor naseg objekta deljene memorije, sve zavisi koji flag postavimo
+  i kakvo nam ponasanje treba, zanci promene direktno mogu iz P1 da se preslikaju u objekat deljene memorije ali
+  opet i ne mora
+  
+- 
+  
+-------------------------------------------------------------------------------------------------------------------------------
+  
+9. CAS (snimak Vidoje)
+
+- pajp uvek mora da ide pre fork poziva, jer kada bismo uradili nakon fork poziva i roditelj i dete bi imali
+  svako za sebe pajp tj bili bi nezavisni medjusobno i ne bi mogli da komuniciraju, jer ti pajp-ovi nemaju veze
+  jedan sa drugim
+  
+- ako je child != 0 onda znamo da smo u roditelju
+
+- ako na primer treba od roditelja da prosledimo nesto ka detetu onda cemo u roditeljskoj grani OBAVEZNO zatvoriti
+  READ_END tj zatvaramo roditelju granu za citanje jer on treba samo da pise posto salje informacije detetu
+  
+- ako je nesto linijski baferisano onda je novi red okidac za neki dalju operaciju
+
+- funkcija fflush prazni bafer, a argument je strim koji treba da prazni
+
+- pomocu funkcije setvbuf menjamo nacin baferisanja na primer standardnog izlaza
+
+- standardni izlaz za greske (stderr) nije baferisan jer se njegov sadrzaj smatra bitnim i odmah se salje na izlaz
+  za greske
+
+- man feof funkcija vraca tacno u slucaju da je strim dosao do EOF, a postoji i ferror koji vraca tacno u slucaju
+  da je doslo do neke greske pri citanju sa strima
+
+- system() funkcija radi slicno kao exec gde prima nisku koja predstavlja niz komandi (npr gcc -o 1 1.c) i na osnovu tog
+  niza komandi prosledi exec-u gde ih on sam parsira i dobija pojedinacne opcije i uzima ono sto dete vrati tj uzima exit
+  kod deteta
+  
+-------------------------------------------------------------------------------------------------------------------------------
+
+10. CAS (snimak Vidoje)
+
+- kada zakljucavamo fajl moramo da znamo koji fajl zakljucavamo, od kog bajta po redu zakljucavamo i koliko bajtova
+  zakljucavamo
+  
+- nije isto da li zakljucavamo nesto za pisanje ili zakljucavamo nesto za citanje, postoji razlika
+
+- na primer ako dva procesa hoce istovremeno da citaju neki sadrzaj a nijedan nece da ga menja onda mozemo da dozvolimo
+  da oba otvore taj deo i da ga zakljucaju za citanje
+  
+- na primer ako hocemo da jedan pise onda automatski niko drugi ne sme ni da cita ni da pise (prvo ako neko drugi hoce da cita
+  i procita neki tekst a mi u medjuvremenu pisemo nesto bas u taj deo koji se cita onda ce ovaj drugi koji cita videti ono
+  staro, drugo ako mi pisemo u neki deo i jos neko drugi hoce da pise u isti taj deo moze se desiti da paralelno pisemo
+  razlicite karaktere i onda jedan drugom pravimo problem tako)
+  
+- zakljucavanje postoji kao mehanizam bas zbog ovih stvari da bi uskladili da ne dodje do nekih sukoba i kako bi sinhronizovali
+  te operacije citanja i pisanja vise procesa
+  
+- za ovo cemo koristiti funkciju tj. sistemski poziv fcntl tj. to je skraceno od file control
+
+- za nju nam treba fajl deskriptor od fajla koji zelimo da zakljucavamo
+
+- uvek je da zakljucamo samo deo fajla koji treba a ne vise od toga jer time dajemo mogucnost da vise procesa istovremeno
+  cita ili pise nad istim fajlom
+  
+- katanac koji cemo koristiti za zakljucavanje cemo opisivati preko strukture struct flock i ova struktura ima tacno navedena
+  polja u man strani koja MORA da sadrzi
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+11. CAS (snimak Vidoje)
+
+- niti su manji od procesa, kreiraju se u okviru jednog procesa (npr. jedan proces ima 5 niti, drugi proces ima neke svoje
+  niti, treci proces svoje)
+
+- te niti dobijaju svoj stek
+
+- ako neka nit pukne onda puca ceo proces
+
+- kod procesa nije tako, ako jedan baci segmentation fault to ne utice na neki drugi proces
+
+- svaka nit ima svoj stek kao sto je receno ali svaka ima i svoj kod u okviru globalnog koda za taj program
+
+- svaka nit ima svoj prioritet i na osnovu toga one dobijaju procesor za svoj rad tj za svoje izvrsavanje
+
+- u visenitnom programiranju svaka nit ima svoj errno
+
+- svaka funkcija koja u nazivu ima pthread vracaju broj koji predstavlja kod greske, u slucaju uspeha taj broj je 0
+  u slucaju neuspeha funkcije vracaju broj veci od 0 koji predstavlja kod greske
+  
+-------------------------------------------------------------------------------------------------------------------------------
+OSTATAK NEKIH INFORMACIJA SA VEZBI:
+
+- svaki fajl strim je omotac tj. wrapper oko nekog fajl deskriptora, tj sadrzi neke dodatne informacije
+
+- npr fileno(fileStream) izvuce broj i to je fd
+
+- fajl strim je nadskup od fajl deskriptora bukvalno receno
+
+- sistemski poziv pipe uvek ide pre poziva fork
+
+- ako nam treba da od fajl deskriptora dobijemo fajl strim koristimo sistemski poziv fdopen()
+
+- printf() je linijski baferisan i cin vidi \n on prazni svoj bafer i sve sto ima u njemu ispisuje na stdout
+
+- postoji i nacin da mi sami eksplicitno ispraznimo bafer pomocu funkcije fflush()
+
+- stderr nije baferisan i sve sto ima odmah se ispisuje na njega bez ikakvog cekanja
+
+- dup2(pipeFds[WRITE_END], STDOUT_FILENO) ovim smo standardni izlaz perusmerili da ne pokazuje na terminal gde ce da pise
+  informacije kao pre nego smo ga preusmerili da pokazuje na write kraj za fajl deskriptor
