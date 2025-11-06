@@ -1,0 +1,135 @@
+
+1. Uvod u operativne sisteme
+
+1.1. Operativni sistemi
+
+OPERATIVNI SISTEM je jedna od najvaznijih komponenti savremenog racunarskog sistema. Racunarski sistem se sastoji od hardvera
+i softvera. On funkcionise po principima koje je postavio Dzon fon Nojman.
+
+TEHNICKI SISTEM RACUNARA - HARDVER cine uredjaji racunarskog sistema, pre svih procesor i radna memorija, a zatim i ulazno - izlazni uredjaji. Komponente racunarskog sistema su magistralama povezane u celinu.
+
+PROGRAMSKI SISTEM racunara cine aplikativni i sistemski softver. APLIKATIVNI SOFTVER je najvisi sloj u hijerarhiji i cine ga
+programi koji sluze za obavljanje specificnih zadataka na racunaru (npr. program za obradu teksta). 
+SISTEMSKI SOFTVER predstavlja skup programa koji bi trebalo da pruze sto udobniji interfejs (okruzenje) za koriscenje hardvera.
+
+OPERATIVNI SISTEM je deo sistemskog softvera koji je odgovoran za upravljanje racunarskim resursima koji treba da obezbedi sto
+bolje uslove za koriscenje racunara. Operativni sistem predstavlja sloj softvera koji je naslonjen na hardver i trebalo bi da
+korisniku omoguci sto vecu udobnost za rad. To je program koji se sve vreme izvrsava, prati i nadgleda funkcionisanje sistema.
+Sustina operativnih sistema je da obezbede okruzenje u kojem ce korisnici imati mogucnost da sto jednostavnije pokrecu i
+izvrsavaju programe.
+
+Sistemski softver, osim operativnih sistema najcesce sadrzi prevodioce, editore, programe za sortiranje, odnosno programe koji
+nisu esencijalno bitni za funkcionisanje sistema, ali se bez njih tesko moze pruziti dodatna udobnost korisnicima.
+
+Operativni sistemi spadaju u najkomplikovanije i najvece programe, koji se obicno programiraju duzi vremenski period.
+Operativni sistemi se dozivljavaju kao nesto sto se podrazumeva uz hardver.
+
+1.2. Osnovni koncepti operativnih sistema
+
+Savremeni racunari se sastoje od jednog ili vise procesora, memorije, veceg broja ulazno - izlaznih uredjaja. Medjutim, da bi
+ovaj hardver imao upotrebnu vrednost potreban je softver koji ce ga uciniti upotrebljivim.
+
+Osnovni zadaci operativnih sistema su da omoguce sto efikasniju realizaciju sledecih aktivnosti:
+ * upravljanje procesima
+ * upravljanje memorijom
+ * upravljanje ulazno - izlaznim uredjajima
+ * upravljanje podacima
+ * upravljanje mrezama
+
+UPRAVLJANJE PROCESIMA, odnosno programima u izvrsavanju, podrazumeva njihovo kreiranje, izvrsavanje, dodeljivanje resursa
+procesima, sinhronizaciju, donosenje odluka o tome koji proces ce imati priliku da se izvrsava na procesoru u odredjenom
+trenutku.
+UPRAVLJANJE MEMORIJOM se odnosi na rasporedjivanje procesa u okviru radne memorije.
+UPRAVLJANJE ULAZNO-IZLAZNIM UREDJAJIMA se odnosi na kontrolu i transfer podataka izmedju uredjaja i ostatka sistema.
+UPRAVLJANJE PODACIMA podrazumeva cuvanje podataka, vodjenje evidencije o njima, manipulaciju njima.
+UPRAVLJANJE MREZAMA podrazumeva umrezavanje i komunikaciju izmedju racunara.
+
+1.2.1. Funkcije jezgra operativnog sistema
+
+JEZGRO (KERNEL) je deo operativnog sistema u koji su smestene najvaznije funkcije. To je deo softvera koji se prvi ucita
+u radnu memoriju i ostaje u njoj do zavrsetka rada odnosno iskljucivanja sistema. Jezgro se obicno nalazi u posebnom delu
+radne memorije. U njemu su definisana pravila i dozvole kojima se regulise funkcionisanje celokupnog sistema.
+
+1.2.2. Sistemski pozivi
+
+Usluge koje operativni sistem moze da pruzi aplikativnim programima ostvaruju se uz pomoc SISTEMSKIH POZIVA. Programi uz pomoc
+sistemskih poziva komuniciraju sa jezgrom i pomocu njega dobijaju mogucnost da izvrse osetljive operacije u sistemu. Sistemski
+pozivi su implementirani tako da dozvole samo operacije koje ne mogu biti stetne po racunarski sistem. Procesori savremenih
+racunarskih sistema imaju mogucnost rada u bar dva razlicita rezima rada: KORISNICKOM (USER MODE) i SISTEMSKOM (KERNEL MODE).
+U sistemskom rezimu moguce je izvrsiti sve instrukcije, dok je broj instrukcija koje je dozvoljeno izvrsiti u korisnickom
+rezimu redukovan. Instrukcije za osetljive operacije poput pristupa ulazno - izlaznim uredjajima, zasticenim delovima memorije
+moguce je izvrsiti samo u sistemskom rezimu rada procesora.
+
+Aplikativni programi se veci deo vremena izvrsavaju u korisnickom rezimu, dok je sistemski rezim predvidjen za posebno
+osetljive operacije koje izvodi operativni sistem. Pri koriscenju sistemskog poziva prelazi se iz korisnickog u sistemski
+rezim.
+Svi ptogrami, cesto ukljucujuci i sistemske, funkcionisu na nivou iznad jezgra u korisnickom rezimu rada. Zbog osetljivosti
+poslova kojima se jezgro bavi, ono se obicno ucitava u poseban, zasticeni deo memorije i time cuva od nezeljenih promena.
+
+Pri dizajniranju operativnih sistema cesto se tezi da se vise aktivnosti odvija u korisnickom rezimu umesto u sistemskom jer
+se na taj nacin povecava stabilnost sistema. Kada aplikativni programi izvrse sistemski poziv, parametri sistemskog poziva
+se postave na predvidjene lokacije u memoriji. Zatim se menja rezim rada u sistemski u kojem su dozvoljene sve operacije
+koje procesor moze da uradi. Tada jezgro preuzima kontrolu i na osnovu parametara sistemskog poziva izvrsava zeljenu operaciju.
+Po zavrsetku operacije rezim rada se ponovo prebacuje u korisnicki.
+
+1.2.3. Korisnicko okruzenje
+
+Mnogi korisnici operativni sistem dozivljavaju kroz KORISNICKO OKRUZENJE. Ono ima zadatak da olaksa koriscenje ostalih delova
+operativnog sistema, a i celokupnog racunarskog sistema. Korisnicka okruzenja se mogu podeliti na linijska i ekranska.
+
+Pod LINIJSKIM KORISNICKIM OKRUZENJIMA podrazumevaju se konzole, terminali, komandne linije koje omogucavaju da se operativnim
+sistemom upravlja kucanjem tekstualnih komandi - linija teksta. Ovakva okruzenja su se medju prvima pojavila u racunarstvu.
+
+Komandni interpreter je najvazniji deo linijskog korisnickog okruzenja i njegova uloga je da naredbe i podatke koje korisnik
+unese u tekstualnom obliku prepozna i nalozi operativnom sistemu izvrsavanje odgovarajucih operacija.
+
+Za razliku od linijskih, EKRANSKA KORISNICKA OKRUZENJA pruzaju mogucnost da se operativnim sistemom upravlja koriscenjem cele
+povrsine ekrana. Osim uz pomoc tastature, komande i manipulacije sa podacima se mogu izvoditi uz pomoc misa i slicnih ulaznih
+uredjaja. Radna povrsina je osnovni deo ekranskog korisnickog okruzenja na kome su aplikacije i podaci predstavljeni vizuelnim
+elementima. Savremeni operativni sistemi obicno pruzaju mogucnost da koriste obe vrste okruzenja.
+
+1.2.4. Drajveri
+
+Ulazno - izlazni uredjaji imaju svoje kontrolere koji se koriste pri komunikaciji sa ostalim delovima sistema. Sa softverske
+strane nalaze se DRAJVERI (DRIVERS - UPRAVLJACKI PROGRAMI) koji se nadogradjuju na kontrolere i omogucavaju komunikaciju,
+odnosno upravljanje ulazno - izlaznim uredjajima.
+
+1.3. Arhitekture operativnih sistema
+
+Postoje razliciti pristupi pri projektovanju operativnih sistema. 
+U odnosu na tim jezgra postoje:
+ 1. Monolitni sistemi
+ 2. Slojeviti sistemi
+ 3. Sistemi zasnovani na mikrojezgru
+ 4. Hibridni sistemi
+ 5. Sistemi zasnovani na egzojezgru
+ 
+1.3.1. Monolitni sistemi
+
+Za arhitekturu operativnog sisema kaze se da je MONOLITNA tj. da ima monolitno jezgro ukoliko se u jezgru nalaze svi servisi
+operativnog sistema zajedno sa drajverima integrisani u jedan program. Pri tome svi delovi se pokrecu u istom trenutku,
+izvrsavaju u sistemskom rezimu i u istom delu memorije. Prilikom pokretanja ovakvog operativnog sistema jezgro se u memoriju
+ucitava u celosti. Veoma melika povezanost funkcija na niskom nivou obicno doprinosi brzini i efikasnosti ovakvih jezgara.
+Jedna od najvecih mana monolitnih jezgara je losa otpornost na greske. U slucaju da dodje do greske u nekom od podsistema,
+dolazi do problema koji mogu uticati na ceo sistem. Neki od najpoznatijih sistema koji imaju monolitna jezgra su: Windows 98,
+GNU/Linux.
+
+1.3.2. Slojeviti sistemi
+
+SLOJEVITA ARHITEKTURA podrazumeva da je operativni sistem izgradjen od zasebnih slojeva (celina) koji se nadogradjuju jedan
+na drugi. Svaki sloj ima odredjene funkcije. Slojevi se implementiraju tako da mogu da koriste iskljucivo usluge prvog sloja
+ispod sebe. Najveci problem ovakvih sistema je neefikasnost. Naime sistemski poziv prolazi kroz vise slojeva sto dovodi do
+usporenja. U najpoznatije operativne sisteme sa slojevitom arhitekturom spadaju: THE, Multics.
+
+1.3.3. Sistemi zasnovani na mikrojezgru
+
+Arhitektura koja se zasniva na MIKROJEZGRU podrazumeva minimalno jezgro u kojem se nalaze samo najosnovnije funkcije. Deo
+funkcija koje bi u prethodnim slucajevima bile deo jezgra se izmestaju u korisnicki prostor. Na ovaj nacin se resavaju
+problemi koji nastaju kada dodje do greske pri primeni neke od ovih funkcija. Usluge operativnog sistema koje su izmestene
+iz jezgra se njemu obracaju kako bi ostvarile svoje ciljeve. Usluge koje obavljaju slicne zadatke u okviru operativnih sistema
+se grupisu u procese koji se nazivaju serverski procesi, a cesto i samo SERVERI. Takodje server za upravljanje memorijom,
+server procesa, server za upravljanje mrezama, server za upravljanje ulazno - izlaznim uredjajima neki su od najvaznijih
+servera koji se mogu implementirati pri ovakvom pristupu.
+Arhitekturu mikrojezgra odlikuje veci stepen sigurnosti u odnosu na monolitne sisteme, ali su oni obicno sporiji. Arhitektura
+zasnovana na mikrojezgru pruza veci stepen sigurnosti i u odnosu na slojevite sisteme, ali brzina nije odlika ni jednog ni
+drugog pristupa. Primeri sistema koji su dizajnirani na principima mikrojezgra su: Minix, L4.
