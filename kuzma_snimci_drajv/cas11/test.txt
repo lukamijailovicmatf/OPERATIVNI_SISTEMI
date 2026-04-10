@@ -1,0 +1,4 @@
+ls -l
+tail test.txt
+stat .
+head jan2019_3.c

@@ -1,0 +1,2 @@
+Pisem po STDIN
+Pisem po STDIN
