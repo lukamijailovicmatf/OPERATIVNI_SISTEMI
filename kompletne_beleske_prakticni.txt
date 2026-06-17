@@ -1,0 +1,999 @@
+CHECK_ERROR
+    #include <sys/stat.h>
+    #include <sys/types.h>
+
+    #define check_error(cond,msg)\
+        do {\
+            if (!(cond)) {\
+                perror(msg);\
+                fprintf(stderr, "File: %s\nFunction: %s\nLine: %d\n", __FILE__, __func__, __LINE__);\
+                exit(EXIT_FAILURE);\
+            }\
+        } while (0)
+
+PERMISIJE:
+    mode - koje permisije ce da ima fajl, pise se u oktalnom format
+    Ako zelimo na primer da ima rwx r-x r-x onda pisemo 111101101, dodajemo tri nule ispred
+    i onda menjamo. 000111101101 postaje 0755.
+
+    O_WRONLY - za pisanje
+    O_RDONLY - za citanje
+    O_RDWR - za citanje i pisanje
+    O_CREATE - ako nema da se kreira
+    O_TRUNC - ako postoji da mu se obrise sadrzaj kada se otvori
+
+    Ako u open hocu vise permisija, onda ih odvajam znakom |
+
+    Ako hocu na trenutne dozvole (flagove) da dodam novu permisiju onda radim sa :
+        flags |= O_WRONLY / O_RDONLY / ... / O_TRUNC
+
+    Ako hocu sa trenutnih dozvola (flagova) da uklonim permisiju onda radim sa :
+        flags &= ~O_WRONLY / ~O_RDONLY / ... / ~O_TRUNC
+
+INCLUDOVI:
+    #include <stdio.h>
+        - Standardni ulaz/izlaz (I/O).
+        - Funkcije: printf, fprintf, scanf, fscanf, fopen, fclose, fgets, fputs, fileno, fdopen, freopen, fflush, setvbuf.
+    
+    #include <stdlib.h>
+        - Opšte funkcije standardne biblioteke.
+        - Funkcije: malloc, realloc, free, exit, getenv, setenv, atoi, strtol, qsort.
+        - Makroi: EXIT_SUCCESS, EXIT_FAILURE.
+    
+    #include <stdbool.h>
+        - Definiše bool tip.
+        - Konstantne vrednosti: true, false.
+    
+    #include <string.h>
+        - Manipulacija stringovima i memorijom.
+        - Funkcije: strcpy, strncpy, strcat, strcmp, strchr, strrchr, strlen, memset, memcpy, memmove, sscanf.
+    
+    #include <stdint.h>
+        - Standardni celobrojni tipovi sa poznatom veličinom (int8_t, uint32_t, itd.).
+    
+    #include <unistd.h>
+        - POSIX osnovne funkcije za rad sa fajlovima, procesima i I/O.
+        - Funkcije: read, write, close, unlink, fork, exec, pipe, sleep, pause, getpid, getppid, dup, dup2, ftruncate, lseek.
+    
+    #include <fcntl.h>
+        - Flagovi i opcije za open(), fcntl() i rad sa fajlovima.
+        - Primeri flagova: O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_TRUNC, O_APPEND.
+    
+    #include <sys/types.h>
+        - Standardni tipovi podataka za POSIX.
+        - Tipovi: pid_t, uid_t, gid_t, mode_t, off_t, nlink_t.
+    
+    #include <sys/stat.h>
+        - Funkcije i strukture za informacije o fajlovima.
+        - Funkcije: stat, fstat, lstat, chmod, umask.
+        - Struktura: struct stat.
+    
+    #include <sys/time.h>
+        - Strukture i funkcije za rad sa vremenom i timere.
+        - Strukture: struct timeval.
+        - Funkcije: gettimeofday, settimeofday.
+    
+    #include <sys/wait.h>
+        - Funkcije za upravljanje završenim procesima.
+        - Funkcije: wait, waitpid, WIFEXITED, WEXITSTATUS, WIFSIGNALED.
+    
+    #include <sys/mman.h>
+        - Funkcije za mapiranje memorije.
+        - Funkcije: mmap, munmap, shm_open, shm_unlink, PROT_READ, PROT_WRITE, MAP_SHARED, MAP_PRIVATE.
+    
+    #include <pwd.h>
+        - Funkcije i strukture za rad sa korisničkom bazom.
+        - Struktura: struct passwd.
+        - Funkcije: getpwnam, getpwent, setpwent, endpwent.
+    
+    #include <grp.h>
+        - Funkcije i strukture za rad sa grupama.
+        - Struktura: struct group.
+        - Funkcije: getgrnam, getgrent, setgrent, endgrent.
+    
+    #include <ftw.h>
+        - Funkcije za rekurzivno prolazak kroz direktorijume (file tree walk).
+        - Funkcija: nftw.
+    
+    #include <time.h>
+        - Rad sa vremenom i datumom.
+        - Tipovi: time_t, struct tm.
+        - Funkcije: time, localtime, mktime, ctime, difftime, strftime.
+    
+    #include <signal.h>
+        - Funkcije i makroi za rad sa signalima.
+        - Funkcije: signal, kill, raise, sigaction.
+        - Makroi: SIGKILL, SIGINT, SIGTERM, SIG_DFL, SIG_IGN.
+    
+    #include <semaphore.h>
+        - POSIX semafori.
+        - Tip: sem_t.
+        - Funkcije: sem_init, sem_wait, sem_post, sem_destroy, sem_open, sem_close, sem_unlink.
+    
+    #include <pthread.h>  // mora da se kompajlira sa -pthread ili -lpthread
+        - POSIX niti (threads).
+        - Tipovi: pthread_t, pthread_mutex_t.
+        - Funkcije: pthread_create, pthread_join, pthread_detach, pthread_self, pthread_mutex_init, pthread_mutex_lock, pthread_mutex_unlock, pthread_mutex_destroy.
+    
+    #include <errno.h>
+        - Standardni kodovi grešaka.
+        - Varijabla: errno.
+        - Primeri: EINVAL, ENOENT, EPERM.
+    
+    #include <stdatomic.h>
+        - Atomike i bezbedno multithread upravljanje promenljivama.
+        - Funkcije: atomic_init, atomic_load, atomic_store, atomic_fetch_add, atomic_fetch_sub.
+
+MAN STRANE — kako da znaš GDE da tražiš
+    1️⃣ User Commands
+
+    Komande koje kucaš u terminalu
+
+    man ls
+    man gcc
+    man grep
+
+
+    ➡️ Programi koje pokrećeš iz shell-a
+
+    2️⃣ System Calls
+
+    Direktni pozivi kernelu
+
+    man 2 open
+    man 2 read
+    man 2 write
+
+
+    ➡️ Niskonivojski I/O, fajlovi, procesi
+    📌 Headeri: unistd.h, fcntl.h
+
+    3️⃣ Library Functions
+
+    Standardna C biblioteka
+
+    man 3 printf
+    man 3 malloc
+    man 3 strcmp
+
+
+    ➡️ Većina funkcija koje koristiš u C-u
+    📌 Headeri: stdio.h, stdlib.h, string.h
+
+    4️⃣ Special Files
+
+    Uređaji i fajlovi iz /dev
+
+    man 4 null
+    man 4 tty
+
+
+    ➡️ Ređe ti treba, ali dobro je znati
+
+    5️⃣ File Formats
+
+    Formati fajlova i konfiguracija
+
+    man 5 passwd
+    man 5 fstab
+
+
+    ➡️ Kako izgleda sadržaj fajla
+
+    6️⃣ Games
+
+    Igre 😄
+
+    man 6 fortune
+
+    7️⃣ Miscellaneous
+
+    Standardi, makroi, koncepti
+
+    man 7 stdbool
+    man 7 standards
+    man 7 signal
+
+
+    ➡️ OVDE spada bool ❗
+    📌 Headeri, makroi, pravila jezika
+
+    8️⃣ System Administration
+
+    Admin komande
+
+    man 8 mount
+    man 8 reboot
+
+
+    🔑 Zlatno pravilo (zapamti ovo)
+
+    ❓ “Kako se koristi funkcija?” → man 2 ili man 3
+
+    ❓ “U kom je headeru?” → pogledaj vrh man strane
+
+    ❓ “Tip / makro / standard?” → man 7
+
+USERI, GRUPE, FAJLOVI:
+    Jednom useru pristupamo sa:
+        struct passwd *userInfo = NULL;
+
+        userInfo = getpwnam(username);
+
+    Sve usere:
+        struct passwd *userInfo = NULL;
+
+        setpwent();
+
+        while ((userInfo = getpwent()) != NULL){
+            fprintf(outStream, "###############################\n");
+            fprintf(outStream, "Username:%s\n", userInfo->pw_name);
+            fprintf(outStream, "User id:%d\n", userInfo->pw_uid);
+            fprintf(outStream, "Group id:%d\n", userInfo->pw_gid);
+            fprintf(outStream, "Info:%s\n", userInfo->pw_gecos);
+            fprintf(outStream, "Home dir:%s\n", userInfo->pw_dir);
+            fprintf(outStream, "Default shell program:%s\n", userInfo->pw_shell);
+        }
+
+
+        endpwent();
+
+    Grupe:
+        struct group *groupInfo = NULL;
+
+        setgrent();
+
+        while ((groupInfo = getgrent()) != NULL){
+            fprintf(outStream, "###############################\n");
+            fprintf(outStream, "Username:%s\n", groupInfo->gr_name);
+            fprintf(outStream, "User id:%d\n", groupInfo->gr_gid);
+
+            for (int i = 0; groupInfo->gr_mem[i] != NULL; i++){
+                fprintf(outStream, "\t %s\n", groupInfo->gr_mem[i]);
+            }
+
+        }
+
+
+        endgrent();
+
+    Fajlovi:
+        struct stat fileInfo;
+        check_error(stat(filename, &fileInfo) != -1, "stat");(man 2/3 stat)
+
+        S_ISREG(fileInfo->st_mode) - proveravamo da li je fajl
+        S_ISDIR(fileInfo->st_mode) - proveravamo da li je direktorijum
+        .....
+        S_ISDIR, S_ISREG itd. mozes da nadjes u man 7 inode
+
+        fileInfo.st_mode & S_IRUSR - Da li user ima pravo citanja
+        fileInfo.st_mode & S_IWUSR - Da li user ima pravo pisanja
+        fileInfo.st_mode & S_IXUSR - Da li user ima pravo execute
+        .......
+        mozes da nadjes u man 7 inode
+
+    OVU STRUKTURU NIKAD NE OSLOBADJAMO!!!!
+    Kada ponovo uradimo getpwname ili getpwent stara struktura se brise, tako da ako hocemo da je sacuvamo
+    moramo da napravimo nasu strukturu i da kopiramo sadržaj u nju
+
+LINKOVI
+    hard link - razliciti nazivi za isti fajl
+    symbolic link - svaki za sebe poseban fajl sa posebnim inode brojem
+
+FUNKCIJE:
+    I/O i formatiranje
+
+        fprintf (stdio.h)
+            - Ispisuje formatirani tekst na dati izlazni tok (stdout, stderr, fajl).
+            - Povratna vrednost: broj upisanih karaktera, negativna vrednost na grešku.
+        
+        getline (stdio.h, stdlib.h)
+            - Čita celu liniju sa standardnog ulaza ili fajla, automatski proširujući nisku po potrebi.
+            - Povratna vrednost: broj pročitanih karaktera (uključujući '\n'), -1 na kraju fajla ili grešku.
+            - Argumenti:
+                - char **lineptr – pokazivač na buffer za liniju
+                - size_t *n – veličina buffer-a
+                - FILE *stream – ulazni tok (npr. stdin ili fajl)
+
+        fileno (stdio.h)
+            - Vraća file descriptor koji je povezan sa datim FILE * stream-om.
+            - Omogućava korišćenje niskonivo funkcija (read, write, fstat) nad stream-om.
+            - Povratna vrednost:
+                - file descriptor (nenegativna vrednost)
+                - -1 ako dođe do greške
+
+        fdopen (stdio.h)
+            - Kreira FILE * stream na osnovu postojećeg file descriptora.
+            - Omogućava korišćenje standardnih I/O funkcija nad file descriptorom.
+            - Način rada (čitanje/pisanje) se definiše mode stringom.
+            - Povratna vrednost:
+                - pokazivač na FILE * ako je uspešno
+                - NULL ako dođe do greške
+
+        fclose (stdio.h)
+            - Zatvara otvoreni FILE * stream.
+            - Isprazni (flush) izlazni bafer pre zatvaranja fajla.
+            - Oslobađa resurse povezane sa stream-om.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - EOF ako dođe do greške
+
+        scanf (stdio.h)
+            - Čita formatirani unos sa standardnog ulaza (stdin).
+            - Argumenti uključuju format string i pokazivače na promenljive.
+            - Povratna vrednost:
+                - broj uspešno pročitanih i dodeljenih elemenata
+                - EOF ako dođe do greške ili kraja fajla
+
+        fgets (stdio.h)
+            - Čita liniju teksta iz stream-a u zadati buffer.
+            - Čita najviše n-1 karaktera i dodaje '\0' na kraj.
+            - Zadržava '\n' ako ima mesta u buffer-u.
+            - Povratna vrednost:
+                - pokazivač na buffer ako je uspešno
+                - NULL ako dođe do greške ili kraja fajla
+
+        setvbuf (stdio.h)
+            - Podešava način baferovanja za dati FILE * stream.
+            - Mora se pozvati pre bilo koje druge operacije nad stream-om.
+            - Načini baferovanja:
+                - _IOFBF  – potpuno baferovanje
+                - _IOLBF  – linijsko baferovanje
+                - _IONBF  – bez baferovanja
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - nenulta vrednost ako dođe do greške
+
+        sscanf (stdio.h)
+            - Čita formatirane podatke iz niske (string-a) umesto sa standardnog ulaza.
+            - Na osnovu formata upisuje parsirane vrednosti u prosleđene promenljive.
+            - Ne vrši I/O nad fajlovima, već radi nad memorijom.
+            - Povratna vrednost:
+                - broj uspešno učitanih i dodeljenih vrednosti
+                - EOF ako dođe do greške pre bilo kakvog učitavanja
+
+        sprintf (stdio.h)
+            - Upisuje formatirani tekst u nisku (buffer u memoriji).
+            - Povratna vrednost: broj upisanih karaktera (bez '\0'), negativna vrednost na grešku.
+
+        freopen (stdio.h)
+            - Zatvara postojeći FILE * stream i ponovo ga otvara sa novim fajlom i/ili režimom rada.
+            - Često se koristi za redirekciju standardnih stream-ova (stdin, stdout, stderr).
+            - Ako je stream već otvoren, prvo se zatvara.
+            - Povratna vrednost:
+                - pokazivač na FILE ako je uspešno
+                - NULL ako dođe do greške
+
+    String funkcije
+
+        strcmp (string.h)
+            - Leksički upoređuje dva stringa.
+            - Povratna vrednost: 0 ako su jednaki, <0 ili >0 ako nisu.
+
+        strchr (string.h)
+            - Pronalazi prvo pojavljivanje karaktera u stringu.
+            - Povratna vrednost: pokazivač na karakter ili NULL ako nije pronađen.
+
+        strrchr (string.h)
+            - Pronalazi poslednje pojavljivanje karaktera u stringu.
+            - Povratna vrednost: pokazivač na karakter ili NULL ako nije pronađen.
+
+    Sortiranje
+
+        qsort (stdlib.h)
+            - Sortira niz elemenata proizvoljnog tipa.
+            - Koristi se sa funkcijom za poređenje elemenata (compare function).
+            - Argumenti:
+                - void *base – pokazivač na početak niza
+                - size_t nmemb – broj elemenata u nizu
+                - size_t size – veličina jednog elementa u bajtovima
+                - int (*compar)(const void *, const void *) – funkcija za poređenje
+            - Povratna vrednost:
+                - nema (void)
+
+    Memorija
+        memset (string.h)
+            - Postavlja prvih n bajtova memorijskog prostora na zadatu vrednost.
+            - Najčešće se koristi za inicijalizaciju memorije (npr. postavljanje na 0).
+            - Radi na bajt-nivou, bez obzira na tip podataka.
+            - Povratna vrednost:
+                - pokazivač na memorijski prostor koji je postavljen
+
+    Dinamicka memorija
+        malloc (stdlib.h)
+            - Alocira zadati broj bajtova na heap-u.
+            - Memorija nije inicijalizovana (sadrži nepoznate vrednosti).
+            - Ako nema dovoljno memorije, vraća NULL.
+            - Povratna vrednost:
+                - pokazivač (void *) na alocirani prostor
+                - NULL ako alokacija nije uspela
+
+        realloc (stdlib.h)
+            - Menja veličinu već alociranog memorijskog bloka.
+            - Može proširiti ili smanjiti blok.
+            - Ako je potrebno, može premestiti blok na novu lokaciju.
+            - Ako je prvi argument NULL, ponaša se kao malloc().
+            - Ako je nova veličina 0, ponaša se kao free().
+            - Povratna vrednost:
+                - pokazivač (void *) na novi blok memorije
+                - NULL ako alokacija nije uspela (stari blok ostaje netaknut)
+
+    Vreme
+
+        ctime (time.h)
+            - Pretvara time_t (sekunde od UNIX epohe) u string sa datumom i vremenom.
+            - Povratna vrednost: pokazivač na statički string ili NULL na grešku.
+
+        localtime (time.h)
+            - Pretvara time_t u lokalno vreme (struct tm).
+            - Povratna vrednost: pokazivač na struct tm ili NULL na grešku.
+        
+        mktime (time.h)
+            - Pretvara struct tm u time_t (sekunde od epohe).
+            - Povratna vrednost: time_t vrednost ili -1 na grešku.
+
+        sleep (unistd.h)
+            - Uspavljuje proces na zadati broj sekundi.
+            - Može biti prekinuta signalom.
+            - Povratna vrednost:
+                - 0 ako je spavanje završeno
+                - broj preostalih sekundi ako je prekinuto signalom
+
+    Rad sa fajlovima (metadata i prava)
+
+        open (fcntl.h, sys/types.h, sys/stat.h)
+            - Otvara fajl i vraća file descriptor (int).
+            - Argumenti:
+                - const char *pathname → putanja do fajla
+                - int flags → način otvaranja (O_RDONLY, O_WRONLY, O_RDWR, O_CREAT, O_TRUNC, O_APPEND...)
+                - mode_t mode → prava pristupa (koristi se samo ako je zadat O_CREAT)
+            - Povratna vrednost:
+                - file descriptor (>= 0) ako je uspešno
+                - -1 ako dođe do greške (errno se postavlja)
+
+        close (unistd.h)
+            - Zatvara file descriptor.
+            - Oslobađa resurse povezane sa otvorenim fajlom.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške (errno se postavlja)
+
+        stat (sys/types.h, sys/stat.h)
+            - Čita informacije o fajlu i smešta ih u struct stat.
+            - Povratna vrednost: 0 na uspeh, -1 na grešku.
+
+        fstat (sys/types.h, sys/stat.h)
+            - Čita informacije o fajlu na osnovu file descriptora.
+            - Smešta metapodatke o fajlu u strukturu struct stat.
+            - Koristi se kada je fajl već otvoren.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške
+
+        lstat (sys/types.h, sys/stat.h)
+            - Kao stat, ali za simbolički link vraća informacije o samom linku.
+            - Povratna vrednost: 0 na uspeh, -1 na grešku.
+
+        chmod (sys/types.h, sys/stat.h)
+            - Menja prava pristupa fajlu.
+            - Povratna vrednost: 0 na uspeh, -1 na grešku.
+
+        ftell (stdio.h)
+            - Vraca trenutnu poziciju u fajlu (offset u bajtovima) u odnosu na pocetak fajla.
+            - Povratna vrednost:
+                - trenutna pozicija u fajlu (tip long)
+                - -1L ako dodje do greske.
+            - Argumenti:
+                - FILE *stream – pokazivac na otvoreni fajl.
+
+    Korisnici (passwd baza)
+
+        getpwnam (sys/types.h, pwd.h)
+            - Dohvata informacije o korisniku na osnovu imena.
+            - Povratna vrednost: pokazivač na struct passwd ili NULL na grešku / nepostojećeg korisnika.
+
+        setpwent (pwd.h)
+            - Postavlja čitanje baze korisnika na početak.
+            - Povratna vrednost: nema (void).
+
+        getpwent (pwd.h)
+            - Čita sledeći zapis korisnika iz baze.
+            - Povratna vrednost: pokazivač na struct passwd ili NULL na kraj / grešku.
+
+        endpwent (pwd.h)
+            - Zatvara bazu korisnika.
+            - Povratna vrednost: nema (void).
+
+    Grupe (group baza)
+
+        setgrent (grp.h)
+            - Postavlja čitanje baze grupa na početak.
+            - Povratna vrednost: nema (void).
+
+        getgrent (grp.h)
+            - Čita sledeći zapis grupe iz baze.
+            - Povratna vrednost: pokazivač na struct group ili NULL na kraj / grešku.
+
+        endgrent (grp.h)
+            - Zatvara bazu grupa.
+            - Povratna vrednost: nema (void).
+
+    Direktorijumi
+
+        opendir (dirent.h)
+            - Otvara direktorijum i vraća DIR *.
+            - Povratna vrednost: DIR * na uspeh, NULL na grešku.
+
+        readdir (dirent.h)
+            - Čita sledeći ulaz iz direktorijuma.
+            - Povratna vrednost: struct dirent * ili NULL na kraj / grešku.
+
+        closedir (dirent.h)
+            - Zatvara prethodno otvoren direktorijum.
+            - Povratna vrednost: 0 na uspeh, -1 na grešku.
+
+        DIR *dir_stream = opendir("."); - ovako otvaramo direktorijum (u ovom slucaju trenutni)
+        (dir_entry = readdir(dir_stream)) - ovako citamo u petlji stvari iz direktorijuma i smestamo u - struct dirent *dir_entry = NULL;
+
+        mkdir (sys/stat.h, sys/types.h)
+            - Kreira novi direktorijum.
+            - Argumenti:
+                - const char *pathname → putanja do direktorijuma
+                - mode_t mode → prava pristupa (npr. 0755)
+            - Prava se dodatno modifikuju trenutnim umask.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške (errno se postavlja)
+
+        rmdir (unistd.h)
+            - Briše direktorijum.
+            - Direktorijum mora biti prazan.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške (errno se postavlja)
+
+    Konverzija string → broj    
+
+        atoi (stdlib.h)
+            - Pretvara string u decimalni ceo broj.
+            - Povratna vrednost: konvertovana vrednost, 0 ako konverzija nije uspela.
+
+        strtol (stdlib.h)
+            - Pretvara string u ceo broj uz zadatu bazu.
+            - Povratna vrednost: konvertovana vrednost, LONG_MIN/LONG_MAX uz errno na grešku.
+
+    File descriptor kontrola
+
+        fcntl (fcntl.h)
+            - Dobavlja ili postavlja flagove fajl deskriptora.
+            - Povratna vrednost: zavisi od komande, -1 na grešku.
+
+    Procesi
+
+        unlink (unistd.h)
+            - Briše (uklanja) ime fajla iz fajl sistema.
+            - Smanjuje broj hard linkova fajla (nlink).
+            - Ako broj linkova postane 0 i nijedan proces nema otvoren fajl, fajl se fizički briše.
+            - Ne može da briše direktorijum (za to se koristi rmdir()).
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške (errno se postavlja)
+
+        fork (sys/types.h, unistd.h)
+            - Kreira dete proces dupliranjem trenutnog procesa.
+            - Povratna vrednost: 0 u detetu, PID deteta u roditelju, -1 na grešku.
+
+        getpid (unistd.h)
+            - Vraća PID (process ID) trenutnog procesa.
+            - Povratna vrednost: PID procesa (uvek pozitivna vrednost).
+        
+        getppid (unistd.h)
+            - Vraća PID (process ID) roditeljskog procesa trenutnog procesa.
+            - Povratna vrednost: PID roditeljskog procesa (uvek pozitivna vrednost).
+
+        wait (sys/wait.h, unistd.h)
+            - Čeka da bilo koji dete proces završi i prikuplja njegov status.
+            - Povratna vrednost: PID deteta koje je završilo, ili -1 ako nema deteta ili dođe do greške.
+            - Status završetka se vraća kroz pokazivač int *status, koji može da se analizira makroima WIFEXITED, WEXITSTATUS, itd.
+        
+        waitpid (sys/wait.h, unistd.h)
+            - Čeka da se završi određeni dete proces ili grupa procesa.
+            - Omogućava neblokirajuće čekanje i dodatnu kontrolu ponašanja.
+            - Povratna vrednost:
+                - PID deteta koje je promenilo stanje
+                - 0 ako je korišćen WNOHANG i nijedno dete još nije završilo
+                - -1 ako dođe do greške
+            - Status završetka se vraća kroz pokazivač int *status
+        
+        pipe (unistd.h)
+            - Kreira kanal (pipe) za komunikaciju između procesa.
+            - Povratna vrednost: 0 ako je uspešno, -1 ako je došlo do greške.
+            - Argument: int fd[2] – niz sa dva file descriptora:
+                - fd[0] – za čitanje
+                - fd[1] – za pisanje
+        
+        execl (unistd.h)
+            - Pokreće novi program u trenutnom procesu, zamenjujući postojeći kod i adresni prostor.
+            - Povratna vrednost: **-1 ako dođe do greške** (ako funkcija uspe, **ne vraća ništa**).
+            - Argumenti:
+                - path – putanja do izvršnog fajla
+                - arg0, arg1, …, argn, NULL – lista argumenata završena NULL-om
+
+        execlp (unistd.h)
+            - Pokreće novi program u trenutnom procesu, koristeći PATH za traženje izvršnog fajla.
+            - Povratna vrednost: -1 ako dođe do greške (ako funkcija uspe, ne vraća ništa).
+            - Argumenti:
+                - file – ime izvršnog fajla (PATH pretražuje direktorijume)
+                - arg0, arg1, …, argn, NULL – lista argumenata završena NULL-om
+
+        execv (unistd.h)
+            - Pokreće novi program u trenutnom procesu, koristeći niz argumenata.
+            - Povratna vrednost: **-1 ako dođe do greške** (ako funkcija uspe, **ne vraća ništa**).
+            - Argumenti:
+                - path – putanja do izvršnog fajla
+                - argv – niz stringova sa argumentima, poslednji element mora biti NULL
+
+        execvp (unistd.h)
+            - Pokreće novi program u trenutnom procesu, koristeći PATH za traženje izvršnog fajla i niz argumenata.
+            - Povratna vrednost: -1 ako dođe do greške (ako funkcija uspe, ne vraća ništa).
+            - Argumenti:
+                - file – ime izvršnog fajla (PATH pretražuje direktorijume)
+                - argv – niz stringova sa argumentima, poslednji element mora biti NULL
+
+        dup2 (unistd.h)
+            - Duplira file descriptor tako da novi fd pokazuje na isti otvoreni fajl kao stari fd.
+            - Ako novi fd već postoji, prvo se zatvara.
+            - Povratna vrednost:
+                - novi file descriptor ako je uspešno
+                - -1 ako dođe do greške
+
+    Signali
+
+        signal (signal.h)
+            - Postavlja funkciju koja će obraditi (uhvatiti) određeni signal.
+            - Omogućava definisanje ponašanja procesa pri prijemu signala.
+            - Povratna vrednost:
+                - prethodna funkcija za obradu signala
+                - SIG_ERR u slučaju greške
+            - Kao handler se može koristiti:
+                - korisnička funkcija
+                - SIG_DFL (podrazumevano ponašanje)
+                - SIG_IGN (ignorisi signal)
+
+        pause (unistd.h)
+            - Suspenduje proces dok ne primi signal.
+            - Proces ostaje blokiran dok neki signal ne bude isporučen.
+            - Povratna vrednost:
+                - -1 po prijemu signala
+                - errno se postavlja na EINTR
+
+        kill (signal.h, sys/types.h)
+            - Šalje signal određenom procesu ili grupi procesa.
+            - Može se koristiti i za proveru postojanja procesa (signal 0).
+            - Povratna vrednost:
+                - 0 ako je signal uspešno poslat
+                - -1 ako dođe do greške (npr. nepostojeći PID ili nedovoljna prava)
+
+    Deljena memorija
+
+        shm_open (sys/mman.h, fcntl.h)
+            - Otvara ili kreira objekat deljene memorije.
+            - Deljena memorija se identifikuje imenom (kao fajl u /dev/shm).
+            - Prava pristupa i način otvaranja definišu se flagovima (O_CREAT, O_RDWR, itd.).
+            - Povratna vrednost:
+                - file descriptor deljene memorije (nenegativna vrednost)
+                - -1 ako dođe do greške
+
+        ftruncate (unistd.h, sys/types.h)
+            - Menja veličinu otvorenog fajla na zadatu dužinu.
+            - Ako je nova veličina manja, fajl se skraćuje.
+            - Ako je nova veličina veća, proširuje se i novi deo se popunjava nulama.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške
+        
+        mmap (sys/mman.h, sys/types.h)
+            - Mapira fajl ili deljenu memoriju u adresni prostor procesa.
+            - Omogućava pristup fajlu kao delu memorije.
+            - Povratna vrednost:
+                - pokazivač na početak mapirane memorije
+                - MAP_FAILED ako dođe do greške
+            - Pristup i ponašanje određuju se flagovima (PROT_READ, PROT_WRITE, MAP_SHARED, MAP_PRIVATE, itd.).
+
+        munmap (sys/mman.h)
+            - Uklanja mapiranje memorijskog regiona iz adresnog prostora procesa.
+            - Koristi se za oslobađanje memorije prethodno mapirane pomoću mmap().
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške
+
+        shm_unlink (sys/mman.h)
+            - Uklanja (briše) objekat deljene memorije po imenu.
+            - Sam objekat se fizički uklanja tek kada ga svi procesi zatvore.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške
+
+        Uvek se ponavlja:
+
+            Pravljenje deljene memorije:
+                void *createMemoryBlock(const *filePath, unsigned size){
+                    int fd = shm_open(filePath, O_RDWR | O_CREAT, 0600);
+                    check_error(fd != -1, "shm_open");
+
+                    check_error(ftruncate(fd, size) != -1, "ftruncate");
+
+                    void *addr = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+                    check_error(addr != MAP_FAILED, "mmap");
+
+                    close(fd);
+                    return addr;
+                }
+            
+            Citanje deljenje memorije:
+                void *getMemoryBlock(const char *filePath, unsigned *size){
+                    int fd = shm_open(filePath, O_RDONLY, 0);
+                    check_error(fd != -1, "shm_open");
+
+                    struct stat fileInfo;
+                    check_error(fstat(fd, &fileInfo) != -1, "ftsta");
+                    *size = fileInfo.st_size;
+
+                    void *addr = mmap(NULL, *size, PROT_READ ,MAP_SHARED, fd, 0);
+                    check_error(addr != MAP_FAILED, "mmap");
+
+                    close(fd);
+                    return addr;
+                }
+
+        Poziva se sa ./a.out ... -lrt
+
+    Semafori
+        sem_init (semaphore.h)
+            - Inicijalizuje neimenovani (unnamed) semafor.
+            - Koristi se za sinhronizaciju između niti ili procesa.
+            - Argumenti:
+                - sem_t *sem – pokazivač na semafor
+                - int pshared – 0 za niti, različito od 0 za procese
+                - unsigned int value – početna vrednost semafora
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške
+        
+        sem_wait (semaphore.h)
+            - Smanjuje (dekrementira) vrednost semafora.
+            - Ako je vrednost semafora 0, proces/nit se blokira dok semafor ne postane veći od 0.
+            - Koristi se za „zaključavanje“ resursa.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške
+
+        sem_post (semaphore.h)
+            - Povećava (inkrementira) vrednost semafora.
+            - Ako su neki procesi ili niti blokirani na semaforu, jedan od njih se odblokira.
+            - Koristi se za „otključavanje“ resursa.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške
+
+        Poziva se sa ./a.out ... -pthread
+
+    Okruženje
+        getenv (stdlib.h)
+            - Dohvata vrednost promenljive okruženja na osnovu njenog imena.
+            - Vraća pokazivač na internu nisku (ne sme se menjati niti oslobađati).
+            - Ako promenljiva ne postoji, vraća NULL.
+            - Povratna vrednost:
+                - pokazivač na nisku (char *) ako promenljiva postoji
+                - NULL ako promenljiva ne postoji
+
+        setenv (stdlib.h)
+            - Postavlja ili menja vrednost promenljive okruženja.
+            - Ako promenljiva već postoji, može se prepisati u zavisnosti od parametra overwrite.
+            - Promena važi za trenutni proces i procese koje on pokrene.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - -1 ako dođe do greške
+
+    Niti
+        pthread_create (pthread.h)
+            - Kreira novu nit koja počinje izvršavanje zadate funkcije.
+            - Nova nit se izvršava paralelno sa pozivaocem.
+            - Argumenti:
+                - pthread_t *thread      → gde se čuva ID niti
+                - const pthread_attr_t *attr → atributi (NULL za podrazumevane)
+                - void *(*start_routine)(void *) → funkcija koju nit izvršava
+                - void *arg → argument funkciji
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - broj greške ako nije uspešno
+
+        pthread_join (pthread.h)
+            - Čeka da se određena nit završi.
+            - Omogućava preuzimanje povratne vrednosti niti.
+            - Sprečava nastanak "zombie" niti.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - broj greške ako nije uspešno
+
+        pthread_self (pthread.h)
+            - Vraća identifikator (pthread_t) trenutne niti.
+            - Koristi se za dobijanje ID-a niti iz same niti.
+            - Povratna vrednost:
+                - pthread_t ID trenutne niti
+        
+        pthread_detach (pthread.h)
+            - Označava nit kao "detached".
+            - Nakon završetka niti, resursi se automatski oslobađaju.
+            - Ne može se pozvati pthread_join() nad detached niti.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - broj greške ako nije uspešno
+
+        pthread_mutex_init (pthread.h)
+            - Inicijalizuje mutex pre nego što se koristi.
+            - Može se koristiti za dinamički kreirane mutex-eve.
+            - Argumenti:
+                - pthread_mutex_t *mutex → pokazivač na mutex koji se inicijalizuje
+                - const pthread_mutexattr_t *attr → atributi mutex-a (NULL za podrazumevane)
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - broj greške ako inicijalizacija nije uspela
+
+        pthread_mutex_destroy (pthread.h)
+            - Uništava mutex i oslobađa resurse koje je koristio.
+            - Mutex mora biti otključan i nit ne sme čekati na njemu kada se uništava.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - broj greške ako uništavanje nije uspelo
+
+        pthread_mutex_lock (pthread.h)
+            - Zaključava (lock) mutex.
+            - Ako je mutex već zaključan od strane druge niti, trenutna nit se blokira dok mutex ne postane dostupan.
+            - Koristi se za zaštitu kritičnih sekcija koda.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - broj greške ako zaključavanje nije uspelo
+
+        pthread_mutex_unlock (pthread.h)
+            - Otključava (unlock) mutex koji je prethodno zaključan.
+            - Ako postoje niti blokirane na mutex-u, jedna od njih se odblokira.
+            - Povratna vrednost:
+                - 0 ako je uspešno
+                - broj greške ako otključavanje nije uspelo
+
+    Atomic
+        atomic_init (stdatomic.h)
+            - Inicijalizuje atomic promenljivu na zadatu vrednost.
+            - Koristi se pre nego što se atomic promenljiva koristi u atomskim operacijama.
+            - Argumenti:
+                - atomic_type *obj → pokazivač na atomic promenljivu
+                - value_type value → početna vrednost
+            - Povratna vrednost:
+                - nema (void)
+
+        atomic_fetch_add (stdatomic.h)
+            - Atomskom operacijom dodaje zadatu vrednost atomic promenljivoj i vraća prethodnu vrednost.
+            - Omogućava bezbedno dodavanje u multithread okruženju.
+            - Argumenti:
+                - atomic_type *obj → pokazivač na atomic promenljivu
+                - value_type arg → vrednost koja se dodaje
+            - Povratna vrednost:
+                - prethodna vrednost atomic promenljive pre dodavanja
+
+        atomic_load (stdatomic.h)
+            - Atomskim pristupom učitava vrednost atomic promenljive.
+            - Omogućava bezbedno čitanje u multithread okruženju bez rizika od race condition.
+            - Argumenti:
+                - const atomic_type *obj → pokazivač na atomic promenljivu
+            - Povratna vrednost:
+                - vrednost atomic promenljive u trenutku poziva
+
+TIPOVI PODATAKA:
+    Vreme i datum
+
+        time_t (time.h)
+            - Celobrojni tip koji predstavlja broj sekundi od UNIX epohe (1.1.1970).  
+
+        struct tm (time.h)
+            - Predstavlja razloženo vreme (broken-down time).
+            - Čuva informacije o datumu i vremenu.
+
+    Semafori
+
+        sem_t (semaphore.h)
+            - Tip koji predstavlja POSIX semafor (koristi se za sinhronizaciju procesa ili niti).
+            - Koristi se sa funkcijama: sem_init, sem_wait, sem_post, sem_destroy, sem_open, sem_close, sem_unlink.  
+
+    Procesi i korisnici
+
+        pid_t (sys/types.h)
+            - Tip za identifikator procesa (PID).  
+
+        uid_t (sys/types.h)
+            - Tip za identifikator korisnika.  
+
+        gid_t (sys/types.h)
+            - Tip za identifikator grupe.  
+
+    Prava i veličine fajlova
+
+        mode_t (sys/types.h)
+            - Tip za prava pristupa fajlu (file permissions).  
+
+        off_t (sys/types.h)
+            - Tip za pomeraj unutar fajla ili veličinu fajla (offset).  
+
+        nlink_t (sys/types.h)
+            - Tip za broj hard linkova fajla.  
+
+    Niti (Threads)
+
+        pthread_t (pthread.h)
+            - Tip podataka koji predstavlja identifikator niti (thread ID).
+            - Koristi se za čuvanje reference na kreiranu nit.
+            - Vraća se iz pthread_create() i koristi u funkcijama kao što su pthread_join(), pthread_detach(), pthread_kill().
+            - Napomena:
+                - Tačan tip je implementaciono zavisan (može biti unsigned long, struktura itd.).
+                - Ne treba ga porediti običnim == operatorom, već koristiti pthread_equal().
+            - Nije struktura definisana standardom (implementacija zavisi od sistema).
+
+        pthread_mutex_t (pthread.h)
+            - Tip podataka koji predstavlja mutex (mutual exclusion).
+            - Koristi se za zaštitu kritične sekcije koda.
+            - Omogućava da samo jedna nit u datom trenutku pristupa zajedničkom resursu.
+            - Osnovne funkcije:
+                - pthread_mutex_init()
+                - pthread_mutex_lock()
+                - pthread_mutex_unlock()
+                - pthread_mutex_destroy()
+            - Napomena:
+                - Može biti statički inicijalizovan:
+                    pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+                - Zaključavanje je blokirajuće (nit čeka dok mutex ne postane dostupan).
+
+    Fajlovi i direktorijumi
+
+        FILE (stdio.h)
+            - Predstavlja tok (stream) za fajl.
+            - Koristi se za standardni ulaz, izlaz i fajlove.
+            - Opaque tip (unutrašnja struktura nije dostupna).
+
+        DIR (dirent.h)
+            - Predstavlja otvoren direktorijum.
+            - Koristi se isključivo preko funkcija opendir, readdir i closedir.
+            - Opaque tip.
+
+        struct stat (sys/stat.h)
+            - Sadrži metapodatke o fajlu (tip, prava, veličina, vremena).
+            - Koristi se za dobijanje informacija o fajlu.
+
+        struct dirent (dirent.h)
+            - Predstavlja jedan ulaz (fajl ili poddirektorijum) u direktorijumu.
+
+        struct flock (fcntl.h)
+            - Struktura koja se koristi sa fcntl() za postavljanje ili proveru zaključavanja fajla.
+            - Omogućava zaključavanje dela fajla (region lock).
+            - Zaključavanje važi po procesu (ne po file descriptor-u).
+            - Koristi se sa komandama:
+                - F_SETLK   (postavlja zaključavanje, bez blokiranja)
+                - F_SETLKW  (postavlja zaključavanje, blokira dok ne bude moguće)
+                - F_GETLK   (proverava da li postoji zaključavanje)
+            - Polja:
+                struct flock {
+                    short l_type;    // tip zaključavanja: F_RDLCK, F_WRLCK, F_UNLCK
+                    short l_whence;  // referentna tačka: SEEK_SET, SEEK_CUR, SEEK_END
+                    off_t l_start;   // početna pozicija zaključavanja
+                    off_t l_len;     // dužina zaključanog regiona (0 = do kraja fajla)
+                    pid_t l_pid;     // PID procesa koji drži zaključavanje (kod F_GETLK)
+                };
+
+    Osnovni tipovi i stringovi
+
+        int
+            - Osnovni celobrojni tip.
+            - Koristi se za file descriptore, povratne vrednosti i kodove grešaka.
+
+        char *
+            - Pokazivač na niz karaktera završen nulom.
+            - Predstavlja string u C-u.exce
